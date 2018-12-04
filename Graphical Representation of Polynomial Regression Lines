@@ -1,0 +1,764 @@
+#=================================================  The below code explains how test error=============================================
+#======================================and train error varies with respect to order of polynomial using graphs=========================
+
+#======================================================================================================================================
+#======================================================================================================================================
+#                                                      Importing the necessary libraries
+#                                              Importing data and diving it tinto test and train 
+#======================================================================================================================================
+#======================================================================================================================================
+
+
+library(ggplot2)                                     # Importing ggplot2 to plot the graphs
+library(polynom)                                     # Improting polynom for polynomial regression 
+
+cars <- read.csv("F://downloads//cars.csv")          # Reading the data
+dim(cars)                                            # Checking the dimention of the 
+                                                     # data before splitting as test and train
+
+set.seed(0)                                          # Setting seed as 0 so that our sample remains constant
+rand_orig = sample(1:nrow(cars),350)          
+train_orig = cars[rand_orig, ]                       # Dividing the data into train 
+test_orig = cars[-rand_orig, ]                       # Remaining data as test 
+dim(train_orig)                                      # Checking the dimention of train data
+dim(test_orig)                                       # Checking the dimention of test data
+l1=list()
+l2=list()
+
+#=======================================================================================================================================
+#=======================================================================================================================================
+#                                                Plotting polynomial regression of fixed order 7
+#                                                    while varying the sample size from 20-350
+#======================================================================================================================================
+#======================================================================================================================================
+
+setwd("C://Users//HP//Downloads//R_graphs")                 # Specifying the path to save the graphs
+
+for (i in c(20,30,40,50,70,100,200,350)){                   # Taking differnt sample sizes to run the model
+  train_1 = sample(1:nrow(train_orig),i)                    # Step to take a random sample differnt samples and split as train data 
+  train = train_orig[train_1,]
+  df<- data.frame("Weight"=train$Weight,"MPG"=train$MPG)    # Creating a data frame with x and y variables
+
+  my.formula <- y ~ poly(x, 7,raw = TRUE)                   # Using poly command for linear regression 
+                                                            # which allows us to specify order of polynomial of the independent variable 
+  p <- ggplot(df, aes(Weight,MPG))                          # Plotting a graph on newly formed dataframe with weight as x and MPG as y 
+  p <- p + geom_point(alpha=2/10, shape=21,                 # Plotting the data points 
+                      fill="blue", colour="black", size=5)
+  p <- p + geom_smooth(method = "lm", se = FALSE,           # We are using 'lm' in method to perform linear regression
+                       formula = my.formula,                # Here are giving the regression eqation as 'formula' for 'lm' command
+                       colour = "red",span=0.5) +           # Mentioning the color and smoothness of our line
+        ggtitle(paste( "Regression line of order 10 when sample size(n): ",i,sep=''))   # Adding title to the graph
+  p <- p + theme(plot.title = element_text(hjust = 0.5,     # Recentring the title and giving it font size and font style
+                        size=14, face="bold.italic"))
+  file_name = paste("1a_7th_order_poly_for_n=", i,          
+                    ".tiff", sep="")                        # Saving the plots in .tiff
+  tiff(file_name)                                                   
+  print(p)
+  dev.off()                                                 # Closing the plot                         
+  
+  m <- lm(MPG ~ poly(Weight,7,raw = TRUE),df)               # Performing polynomial regression   
+  print(paste("Train_Error: ",sum(m$residuals^2)))          # Calculating train error
+  pred = predict(m, newdata=test_orig)                      # Predicting y on test data
+  test_error=sum((pred-test_orig$MPG)^2)                    # Calculating test error
+  print(paste("Test_Error: ",test_error))
+  l1=c(l1,test_error)                                       # Appending test errors into a list for further calculations
+}
+
+l2=c(20,30,40,50,70,100,200,350)                            # Initializing a list with differnt sample sizes
+df1<-do.call(rbind, Map(data.frame,                         # Creating a data frame using rbind with sample size and test error 
+                        "Sample_Size"=l2,"Test_Error"=l1 ))  
+View(df1)
+p <- ggplot(df1, aes(Sample_Size,Test_Error))               # Plotting a graph with sample size as x 
+p <- p + geom_smooth(se=FALSE,span = 0.5)+
+  ggtitle("Test_Error vs Sample Size \n where n=(20,30,40,50,70,100,200,350) \nand Order of Complexity = 7")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Test_Error vs Sample Size order=7",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#********************************* NOTE= The graphs have been repeated for Order 10 also *************
+
+#======================================================================================================
+#======================================================================================================
+#                       Plotting multiple polynomial regresion lines for 4 random samples of data
+#                                     but of fixed size(n = 20)
+#======================================================================================================
+#======================================================================================================
+
+#----------------------------------- Creating 4 random samples-----------------------------------------
+
+set.seed(0)                                               # Setting seed = 0 for n1
+rand_n1 = sample(1:nrow(train_orig),20)                   # Generating randaom sample of size 20
+train_n1 = train_orig[rand_n1,]                           # Creating train data of the same
+set.seed(10)                                              # Setting seed = 10 for n2
+rand_n2 = sample(1:nrow(train_orig),20)
+train_n2 = train_orig[rand_n2,]
+set.seed(50)                                              # Setting seed = 50 for n3
+rand_n3 = sample(1:nrow(train_orig),20)
+train_n3 = train_orig[rand_n3,]
+set.seed(100)                                             # Setting seed = 100 for n4
+rand_n4 = sample(1:nrow(train_orig),20)
+train_n4 = train_orig[rand_n4,]
+
+#---------------------------------------Taking sample n1 = 20 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+                                      
+                                        # n1=rand_n1=train_n1=20 #
+
+df_n1<- data.frame("Weight"=train_n1$Weight,"MPG"=train_n1$MPG) # Creating data frame for n1 sample
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)                       # Creating formula for regression of order 1
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)                       # Creating formula for polynomial regression of order 2
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)                       # Creating formula for polynomial regression of order 7
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)                       # Creating formula for polynomial regression of order 8
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)                       # Creating formula for polynomial regression of order 9
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)                      # Creating formula for polynomial regression of order 10
+
+View(df_n1)                                                     # To view our newly created data frame
+
+
+p <- ggplot(df_n1, aes(Weight,MPG))+                            # Plotting a graph with Weight as x axis and MPG as y axis                    
+  ggtitle(paste( "Fixed sample size(n1 = 20) with Multi Order Regression Lines",sep=''))                             
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 1 
+                     formula = my.formula1, 
+                     aes(colour="Order 1"))
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 2 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 7 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 8 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 9 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE,                 # Fitting a polynomial regression line for order 10 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="LEGEND", values=c("red","blue","black","orange","yellow","green")) # Adding LEGEND to the graph for better understanding
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))            # Adding theme to graph title for recentering 
+file_name = paste("Fixed sample (n1=20) with Multi Order Regression Lines",".tiff", sep="")    # Providing file name with which the graphs get saved 
+tiff(file_name)
+print(p)
+dev.off()                                                        # End of plot
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n1l1=list()
+n1l2=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n1)
+  print(m)
+  pred = predict(m, newdata=test_orig)             # Predicting MPG for differnt orders of polynomial regrssion
+  test_error_n1=sum((pred-test_orig$MPG)^2)        # Calculating test error
+  test_error_n1=sqrt(test_error_n1)                # Calculating RMSE 
+  test_error_n1=log10(test_error_n1)               # Scaling RMSE for better understanding of the plot against Complexity
+  print(paste("RMSE: ",test_error_n1))
+  n1l1=c(n1l1,test_error_n1)                       # Appending all the RMSE values into a list for further usuage
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+n1l2=list(1,2,7,8,9,10)                             # List with order of complexity 
+df_n11<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n1l1 )) # Creating a data frame using rbind with RMSE and Complexity
+p <- ggplot(df_n11, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5) +           # Plotting the lines with x = Complexity and y = RMSE 
+         ggtitle("RMSE vs Complexity \n Sample size (n1) = 20") # Adding title to graph          
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic")) #Adding theme to graph
+file_name = paste("RMSE vs Complexity Sample size (n1) = 20",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#---------------------------------------Taking sample n2 = 20 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                        # n2=rand_n2=train_n2=20 #
+
+df_n2<- data.frame("Weight"=train_n2$Weight,"MPG"=train_n2$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n2)
+
+p <- ggplot(df_n2, aes(Weight,MPG)) +
+  ggtitle(paste( "Fixed sample size(n2 = 20) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1"))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n2=20) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n2l1=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n2)
+  pred = predict(m, newdata=test_orig)
+  test_error_n2=sum((pred-test_orig$MPG)^2)
+  test_error_n2=sqrt(test_error_n2)
+  test_error_n2=log10(test_error_n2)
+  print(paste("RMSE: ",test_error_n2))
+  n2l1=c(n2l1,test_error_n2)
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n21<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n2l1 ))
+p <- ggplot(df_n21, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n2) = 20")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity Sample size (n2) = 20",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#---------------------------------------Taking sample n3 = 20 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+  
+                                        # n3=rand_n3=train_n3=20 #
+
+df_n3<- data.frame("Weight"=train_n3$Weight,"MPG"=train_n3$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n3)
+
+p <- ggplot(df_n3, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample size(n3 = 20) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1"))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample size(n3=20) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+n3l1=list()
+n2l11=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n3)
+  pred = predict(m, newdata=test_orig)
+  test_error_n3=sum((pred-test_orig$MPG)^2)
+  test_error_n3=sqrt(test_error_n3)
+  test_error_n3=log10(test_error_n3)
+  print(paste("RMSE: ",test_error_n3))
+  n3l1=c(n3l1,test_error_n3)
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n31<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n3l1 ))
+p <- ggplot(df_n31, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n3) = 20")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity Sample size (n3) = 20",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#---------------------------------------Taking sample n4 = 20 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                     # n4=rand_n4=train_n4=20 #
+
+df_n4<- data.frame("Weight"=train_n3$Weight,"MPG"=train_n4$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n4)
+
+p <- ggplot(df_n4, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample(n4 = 20) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1"))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n4=20) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n4l1=list()
+n4l11=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n4)
+  train_error_n4=sum(m$residuals^2)                       # Calculating Train error 
+  train_error_n4=sqrt(train_error_n4)                     # Calculating Train RMSE
+  train_error_n4=log10(train_error_n4)                    # Scaling it to fit the graph   
+  n4l11=c(n4l11,train_error_n4)                           # Appending all Train RMSE to a list 
+  pred = predict(m, newdata=test_orig)                    # Predicting y(MPG) on test data
+  test_error_n4=sum((pred-test_orig$MPG)^2)               # Calculating Test error
+  test_error_n4=sqrt(test_error_n4)                       # Calculating Test RMSE
+  test_error_n4=log10(test_error_n4)                      # Scaling it to fit the graph 
+  print(paste("RMSE: ",test_error_n4))
+  n4l1=c(n4l1,test_error_n4)                              # Appending all Test RMSE to a list
+}
+
+View(n4l11)
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n41<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n4l1 ))
+p <- ggplot(df_n41, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n4) = 20")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity Sample size (n4) = 20",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#-------------------------------Plotting TEST & TRAIN RMSE vs COMPLEXITY (n=20)-------------------------------
+
+df_n411<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"TEST_RMSE"=n4l1,"TRAIN_RMSE"=n4l11 ))
+View(df_n411)
+p <- ggplot(df_n411, aes(Complexity,TEST_RMSE/TRAIN_RMSE))
+p <- p + geom_line(aes(y = TEST_RMSE, colour = "TEST_RMSE"))+
+  ggtitle("TEST_RMSE & TRAIN_RMSE vs COMPLEXITY (n=20)")
+p <- p + geom_line(aes(y = TRAIN_RMSE, colour = "TRAIN_RMSE"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("TEST_RMSE & TRAIN_RMSE vs Complexity (n=20)",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#======================================================================================================
+#======================================================================================================
+#                                   Plotting graph of Test RMSE from 4 differnt samples of n
+#                                    where n=20 against differnt Orders of complexity
+#======================================================================================================
+#======================================================================================================
+
+l2=list(1,2,7,8,9,10)                                                # List with differnt orders of complexity
+df_n11<-do.call(rbind, Map(data.frame, "Complexity"=l2,"Test_RMSE"=n1l1)) # Creating data frame for RMSE of n1 sample and complexity
+df_n21<-do.call(rbind, Map(data.frame, "Complexity"=l2,"Test_RMSE"=n2l1)) # Creating data frame for RMSE of n2 sample and complexity
+df_n31<-do.call(rbind, Map(data.frame, "Complexity"=l2,"Test_RMSE"=n3l1)) # Creating data frame for RMSE of n3 sample and complexity
+df_n41<-do.call(rbind, Map(data.frame, "Complexity"=l2,"Test_RMSE"=n4l1)) # Creating data frame for RMSE of n4 sample and complexity
+
+p <- ggplot() + ggtitle("Test RMSE vs Complexity for 4 random sample of n=20") +
+  geom_line(data=df_n11, aes(Complexity,Test_RMSE, color='RMSE_n1')) + 
+  geom_line(data=df_n21, aes(Complexity,Test_RMSE, color='RMSE_n2')) +
+  geom_line(data=df_n31, aes(Complexity,Test_RMSE, color='RMSE_n3'))+
+  geom_line(data=df_n41, aes(Complexity,Test_RMSE, color='RMSE_n4'))+
+  scale_colour_manual("", 
+                      breaks = c("RMSE_n1", "RMSE_n2", "RMSE_n3","RMSE_n4"),
+                      values = c("red", "green", "blue","black"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Test RMSE vs Complexity for 4 random sample of n=20",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#======================================================================================================
+#======================================================================================================
+#                       Plotting multiple polynomial regresion lines for 4 random samples of data
+#                                     but of fixed size(n = 100)
+#======================================================================================================
+#======================================================================================================
+
+#----------------------------------- Creating 4 random samples-----------------------------------------
+
+set.seed(0)                                               # Setting seed = 0 for n1
+rand_n1 = sample(1:nrow(train_orig),100)                   # Generating randaom sample of size 100
+train_n1 = train_orig[rand_n1,]                           # Creating train data of the same
+set.seed(10)                                              # Setting seed = 10 for n2
+rand_n2 = sample(1:nrow(train_orig),100)
+train_n2 = train_orig[rand_n2,]
+set.seed(50)                                              # Setting seed = 50 for n3
+rand_n3 = sample(1:nrow(train_orig),100)
+train_n3 = train_orig[rand_n3,]
+set.seed(100)                                             # Setting seed = 100 for n4
+rand_n4 = sample(1:nrow(train_orig),100)
+train_n4 = train_orig[rand_n4,]
+
+#---------------------------------------Taking sample n1 = 100 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                        # n1=rand_n1=train_n1=100 #
+
+df_n1_100<- data.frame("Weight"=train_n1$Weight,"MPG"=train_n1$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n1)
+
+p <- ggplot(df_n1_100, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample(n1 = 100) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1"))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n1=100) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n1l1=list()
+n1l2=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n1_100)
+  print(m)
+  pred = predict(m, newdata=test_orig)
+  test_error_n1=sum((pred-test_orig$MPG)^2)
+  test_error_n1=sqrt(test_error_n1)
+  test_error_n1=log10(test_error_n1)
+  print(paste("RMSE: ",test_error_n1))
+  n1l1=c(n1l1,test_error_n1)
+}
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+n1l2=list(1,2,7,8,9,10)
+df_n11<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n1l1 ))
+p <- ggplot(df_n11, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n1) = 100")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity of Sample size (n1) = 100",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+
+#---------------------------------------Taking sample n2 = 100 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                           # n2=rand_n2=train_n2=100 #
+
+df_n2_100<- data.frame("Weight"=train_n2$Weight,"MPG"=train_n2$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n2_100)
+
+p <- ggplot(df_n2_100, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample(n2 = 100) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n2=100) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n2l1=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n2_100)
+  print(m)
+  pred = predict(m, newdata=test_orig)
+  test_error_n2=sum((pred-test_orig$MPG)^2)
+  test_error_n2=sqrt(test_error_n2)
+  test_error_n2=log10(test_error_n2)
+  print(paste("Test_Error: ",test_error_n2))
+  n2l1=c(n2l1,test_error_n2)
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n21<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n2l1 ))
+p <- ggplot(df_n21, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n2) = 100")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity of Sample size (n2) = 100",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#---------------------------------------Taking sample n3 = 100 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                          # n3=rand_n3=train_n3=100 #
+
+df_n3_100 <- data.frame("Weight"=train_n3$Weight,"MPG"=train_n3$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n3_100)
+
+p <- ggplot(df_n3_100, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample(n3 = 100) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n3=100) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n3l1=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n3_100)
+  print(m)
+  pred = predict(m, newdata=test_orig)
+  test_error_n3=sum((pred-test_orig$MPG)^2)
+  test_error_n3=sqrt(test_error_n3)
+  test_error_n3=log10(test_error_n3)
+  print(paste("Test_Error: ",test_error_n3))
+  n3l1=c(n3l1,test_error_n3)
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n31<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n3l1 ))
+p <- ggplot(df_n31, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n3) = 100")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity of Sample size (n3) = 100",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#---------------------------------------Taking sample n4 = 100 to perform ------------------------------
+#----------------------multiple polynomial regression and provide the output in same graph-------------
+
+                                               # n4=rand_n4=train_n4=100 #
+
+df_n4_100<- data.frame("Weight"=train_n3$Weight,"MPG"=train_n4$MPG)
+my.formula1 <- y ~ poly(x, 1, raw = TRUE)
+my.formula2 <- y ~ poly(x, 2, raw = TRUE)
+my.formula3 <- y ~ poly(x, 7, raw = TRUE)
+my.formula4 <- y ~ poly(x, 8, raw = TRUE)
+my.formula5 <- y ~ poly(x, 9, raw = TRUE)
+my.formula6 <- y ~ poly(x, 10, raw = TRUE)
+
+View(df_n4_100)
+
+options(warn=-1)
+
+p <- ggplot(df_n4_100, aes(Weight,MPG)) +
+     ggtitle(paste( "Fixed sample(n4 = 100) with Multi Order Regression Lines",sep=''))
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula1, 
+                     aes(colour="Order 1")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula2, 
+                     aes(colour = "order 2")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula3, 
+                     aes(colour="Order 7")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula4, 
+                     aes(colour="Order 8")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula5, 
+                     aes(colour="Order 9")) 
+p <- p + geom_smooth(method = "lm", se = FALSE, 
+                     formula = my.formula6, 
+                     aes(colour="Order 10"))+
+  scale_colour_manual(name="legend", values=c("red","blue","black","orange","yellow","green"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Fixed sample (n4=100) with Multi Order Regression Lines",".tiff", sep="")
+tiff(file_name)
+print(p)
+dev.off()
+
+#--------------------------------Finding RMSE for all the polynomial regression lines------------------
+
+n4l1=list()
+n4l11=list()
+for (i in c(1,2,7,8,9,10)){
+  m <- lm(MPG ~ poly(Weight,i,raw = FALSE),df_n4_100)
+  train_error_n4=sum(m$residuals^2)                       # Calculating Train error 
+  train_error_n4=sqrt(train_error_n4)                     # Calculating Train RMSE
+  train_error_n4=log10(train_error_n4)                    # Scaling it to fit the graph   
+  n4l11=c(n4l11,train_error_n4)                           # Appending all Train RMSE to a list 
+  pred = predict(m, newdata=test_orig)                    # Predicting y(MPG) on test data
+  test_error_n4=sum((pred-test_orig$MPG)^2)               # Calculating Test error
+  test_error_n4=sqrt(test_error_n4)                       # Calculating Test RMSE
+  test_error_n4=log10(test_error_n4)                      # Scaling it to fit the graph
+  print(paste("RMSE_Test: ",test_error_n4))          
+  n4l1=c(n4l1,test_error_n4)                              # Appending all Test RMSE to a list
+}
+
+#-------------------------------Plotting graph of RMSE vs Complexity-----------------------------------
+
+df_n41<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"RMSE"=n4l1 ))
+p <- ggplot(df_n41, aes(Complexity,RMSE))
+p <- p + geom_smooth(se=FALSE,span=0.5)+ggtitle("RMSE vs Complexity \n Sample size (n4) = 100")
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("RMSE vs Complexity Sample size (n4) = 100",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#-------------------------------Plotting TEST & TRAIN RMSE vs COMPLEXITY-------------------------------
+
+df_n411<-do.call(rbind, Map(data.frame, "Complexity"=n1l2,"TEST_RMSE"=n4l1,"TRAIN_RMSE"=n4l11 ))
+View(df_n411)
+p <- ggplot(df_n411, aes(Complexity,TEST_RMSE/TRAIN_RMSE))
+p <- p + geom_line(aes(y = TEST_RMSE, colour = "TEST_RMSE"))+
+  ggtitle("TEST_RMSE & TRAIN_RMSE vs COMPLEXITY (n=100)")
+p <- p + geom_line(aes(y = TRAIN_RMSE, colour = "TRAIN_RMSE"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("TEST_RMSE & TRAIN_RMSE vs Complexity (n=100)",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+
+#======================================================================================================
+#======================================================================================================
+#                                   Plotting graph of Test RMSE from 4 differnt samples of n
+#                                    where n=100 against differnt Orders of complexity
+#======================================================================================================
+#======================================================================================================
+
+l2=list(1,2,7,8,9,10)                                                # List with differnt orders of complexity
+df_n11<-do.call(rbind, Map(data.frame, "Complexity"=l2,"RMSE"=n1l1)) # Creating data frame for RMSE of n1 sample and complexity
+df_n21<-do.call(rbind, Map(data.frame, "Complexity"=l2,"RMSE"=n2l1)) # Creating data frame for RMSE of n2 sample and complexity
+df_n31<-do.call(rbind, Map(data.frame, "Complexity"=l2,"RMSE"=n3l1)) # Creating data frame for RMSE of n3 sample and complexity
+df_n41<-do.call(rbind, Map(data.frame, "Complexity"=l2,"RMSE"=n4l1)) # Creating data frame for RMSE of n4 sample and complexity
+
+p <- ggplot() + ggtitle("Test RMSE vs Complexity for 4 random sample of n=100")+
+  geom_line(data=df_n11, aes(Complexity,RMSE, color='RMSE_n1')) + 
+  geom_line(data=df_n21, aes(Complexity,RMSE, color='RMSE_n2')) +
+  geom_line(data=df_n31, aes(Complexity,RMSE, color='RMSE_n3'))+
+  geom_line(data=df_n41, aes(Complexity,RMSE, color='RMSE_n4'))+
+  scale_colour_manual("", 
+                      breaks = c("RMSE_n1", "RMSE_n2", "RMSE_n3","RMSE_n4"),
+                      values = c("red", "green", "blue","black"))
+p <- p + theme(plot.title = element_text(hjust = 0.5, size=14, face="bold.italic"))
+file_name = paste("Test RMSE vs Complexity for 4 random sample of n=100",".tiff")
+tiff(file_name)
+print(p)
+dev.off()
+###########################################################################################
+###########################################################################################
+###########################################################################################
+
+
+
